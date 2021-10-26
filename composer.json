@@ -1,0 +1,28 @@
+{
+  "name": "noweh/php-soundcloud",
+  "description": "Soundcloud API Wrapper.",
+  "keywords": [
+    "php",
+    "SoundCloud",
+    "API"
+  ],
+  "require": {
+    "ext-curl": "*",
+    "ext-json": "*",
+    "php": ">=7.3"
+  },
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Julien Schmitt",
+      "email": "jschmitt95@protonmail.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Noweh\\SoundcloudApi\\": "src/"
+    }
+  },
+  "minimum-stability": "dev"
+}
