@@ -117,8 +117,6 @@ try {
 ```
 ... // Create a new instance of client
 
-$trackData = json_encode();
-
 try {
     $response = $client->put(
         'tracks/1',
