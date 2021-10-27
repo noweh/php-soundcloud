@@ -35,15 +35,6 @@ class Soundcloud
     private $_redirectUri;
 
     /**
-     * Development mode
-     *
-     * @var boolean
-     *
-     * @access private
-     */
-    private $_development;
-
-    /**
      * Access code
      *
      * @var boolean
@@ -62,19 +53,6 @@ class Soundcloud
     private $_accessToken;
 
     /**
-     * Available API domains
-     *
-     * @var array
-     *
-     * @access private
-     * @static
-     */
-    private static $_domains = array(
-        'development' => 'api.sandbox-soundcloud.com',
-        'production' => 'api.soundcloud.com'
-    );
-
-    /**
      * Class constructor.
      *
      * @param string  $clientId     OAuth client id
@@ -87,7 +65,7 @@ class Soundcloud
      *
      * @access public
      */
-    public function __construct(string $clientId, string $clientSecret, string $redirectUri = '', bool $development = false)
+    public function __construct(string $clientId, string $clientSecret, string $redirectUri = '')
     {
         if (empty($clientId) || empty($clientSecret)) {
             throw new InvalidArgumentException('clientId and clientSecret must be set');
@@ -96,7 +74,6 @@ class Soundcloud
         $this->_clientId = $clientId;
         $this->_clientSecret = $clientSecret;
         $this->_redirectUri = $redirectUri;
-        $this->_development = $development;
     }
 
     /**
@@ -328,9 +305,7 @@ class Soundcloud
                 $path = substr($path, 1);
             }
 
-            $url = 'https://';
-            $url .= ($this->_development) ? self::$_domains['development'] : self::$_domains['production'];
-            $url .= '/';
+            $url = 'https://api.soundcloud.com/';
             $url .= $path;
         }
 
