@@ -281,9 +281,11 @@ class Soundcloud
         if (!$this->_accessToken) {
             // Try to auto retrieve the access token with code in instance or in the URL
             if (!$this->_code) {
-                $this->_code = $_GET['code'];
-            } else {
-                throw new InvalidArgumentException('accessToken must be set or accessible in URL parameters');
+                if ($_GET['code']) {
+                    $this->_code = $_GET['code'];
+                } else {
+                    throw new InvalidArgumentException('accessToken must be set or accessible in URL parameters');
+                }
             }
 
             $soundCloudResponse = $this->post(
