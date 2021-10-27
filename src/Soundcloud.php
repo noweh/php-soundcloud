@@ -44,6 +44,15 @@ class Soundcloud
     private $_development;
 
     /**
+     * Access code
+     *
+     * @var boolean
+     *
+     * @access private
+     */
+    private $_code;
+
+    /**
      * Access token returned by the service provider after a successful authentication
      *
      * @var string
@@ -61,8 +70,8 @@ class Soundcloud
      * @static
      */
     private static $_domains = array(
-        'development' => 'sandbox-soundcloud.com',
-        'production' => 'soundcloud.com'
+        'development' => 'api.sandbox-soundcloud.com',
+        'production' => 'api.soundcloud.com'
     );
 
     /**
@@ -93,14 +102,17 @@ class Soundcloud
     /**
      * Get authorization URL.
      *
+     * @param string $state Any value included here will be appended to te redirect URI
+     *
      * @return string
      */
-    public function getAuthorizeUrl(): string
+    public function getAuthorizeUrl(string $state): string
     {
         $params = [
             'client_id' => $this->_clientId,
             'redirect_uri' => $this->_redirectUri,
-            'response_type' => 'code'
+            'response_type' => 'code',
+            'state' => $state
         ];
 
         return $this->buildUrl('connect', $params);
@@ -112,16 +124,18 @@ class Soundcloud
      * @param string $path Request path
      * @param array $params Optional query string parameters
      * @param array $curlOptions Optional cURL options
+     * @param bool $needAccessToken Optional add/remove access token in header
      *
      * @return mixed
      * @throws InvalidHttpResponseCodeException
      * @throws \JsonException
+     * @throws InvalidArgumentException
      */
-    public function get(string $path, array $params = [], array $curlOptions = [])
+    public function get(string $path, array $params = [], array $curlOptions = [], bool $needAccessToken = true)
     {
         $url = $this->buildUrl($path, $params);
 
-        return $this->performRequest($url, $curlOptions);
+        return $this->performRequest($url, $curlOptions, $needAccessToken);
     }
 
     /**
@@ -130,12 +144,14 @@ class Soundcloud
      * @param string $path Request path
      * @param array $postData Optional post data
      * @param array $curlOptions Optional cURL options
+     * @param bool $needAccessToken Optional add/remove access token in header
      *
      * @return mixed
      * @throws InvalidHttpResponseCodeException
      * @throws \JsonException
+     * @throws InvalidArgumentException
      */
-    public function post(string $path, array $postData = [], array $curlOptions = [])
+    public function post(string $path, array $postData = [], array $curlOptions = [], bool $needAccessToken = true)
     {
         $url = $this->buildUrl($path);
         $options = [
@@ -144,7 +160,7 @@ class Soundcloud
         ];
         $options = array_replace($options, $curlOptions);
 
-        return $this->performRequest($url, $options);
+        return $this->performRequest($url, $options, $needAccessToken);
     }
 
     /**
@@ -153,12 +169,14 @@ class Soundcloud
      * @param string $path Request path
      * @param array $postData Optional post data
      * @param array $curlOptions Optional cURL options
+     * @param bool $needAccessToken Optional add/remove access token in header
      *
      * @return mixed
      * @throws InvalidHttpResponseCodeException
      * @throws \JsonException
+     * @throws InvalidArgumentException
      */
-    public function put(string $path, array $postData, array $curlOptions = [])
+    public function put(string $path, array $postData, array $curlOptions = [], bool $needAccessToken = true)
     {
         $url = $this->buildUrl($path);
         $options = [
@@ -167,7 +185,7 @@ class Soundcloud
         ];
         $options = array_replace($options, $curlOptions);
 
-        return $this->performRequest($url, $options);
+        return $this->performRequest($url, $options, $needAccessToken);
     }
 
     /**
@@ -176,18 +194,20 @@ class Soundcloud
      * @param string $path Request path
      * @param array $params Optional query string parameters
      * @param array $curlOptions Optional cURL options
+     * @param bool $needAccessToken Optional add/remove access token in header
      *
      * @return mixed
      * @throws InvalidHttpResponseCodeException
      * @throws \JsonException
+     * @throws InvalidArgumentException
      */
-    public function delete(string $path, array $params = [], array $curlOptions = [])
+    public function delete(string $path, array $params = [], array $curlOptions = [], bool $needAccessToken = true)
     {
         $url = $this->buildUrl($path, $params);
         $options = [CURLOPT_CUSTOMREQUEST => 'DELETE'];
         $options = array_replace($options, $curlOptions);
 
-        return $this->performRequest($url, $options);
+        return $this->performRequest($url, $options, $needAccessToken);
     }
 
     /**
@@ -228,15 +248,63 @@ class Soundcloud
             ],
             [
                 CURLOPT_FOLLOWLOCATION => true
-            ]
+            ],
+            false
         );
 
         return $soundcloudResponse->html ?? null;
     }
 
-    private function getAccessToken(): void
+    public function setCode(string $code): void
     {
+        $this->_code = $code;
+    }
 
+    /**
+     * Set Access Token
+     * @param string $accessToken
+     */
+    public function setAccessToken(string $accessToken): void
+    {
+        $this->_accessToken = $accessToken;
+    }
+
+    /**
+     * Get Access Token
+     * @return string
+     * @throws InvalidArgumentException
+     * @throws InvalidHttpResponseCodeException
+     * @throws \JsonException
+     */
+    private function getAccessToken(): string
+    {
+        if (!$this->_accessToken) {
+            // Try to auto retrieve the access token with code in instance or in the URL
+            if (!$this->_code) {
+                $this->_code = $_GET['code'];
+            } else {
+                throw new InvalidArgumentException('accessToken must be set or accessible in URL parameters');
+            }
+
+            $soundCloudResponse = $this->post(
+                $this->buildUrl('oauth2/token'),
+                [
+                    'grant_type' => 'authorization_code',
+                    'client_id' => $this->_clientId,
+                    'client_secret' => $this->_clientSecret,
+                    'code' => $this->_code,
+                    'redirect_uri' => $this->_redirectUri,
+                ],
+                [],
+                false
+            );
+
+            if ($soundCloudResponse && $soundCloudResponse->access_token) {
+                $this->_accessToken = $soundCloudResponse->access_token;
+            }
+        }
+
+        return $this->_accessToken;
     }
 
     /**
@@ -251,13 +319,13 @@ class Soundcloud
      */
     protected function buildUrl(string $path, array $params = []): string
     {
-        if (!$this->_accessToken) {
-            $params['consumer_key'] = $this->_clientId;
-        }
-
         if (preg_match('/^https?\:\/\//', $path)) {
             $url = $path;
         } else {
+            if ($path[0] === '/') {
+                $path = substr($path, 1);
+            }
+
             $url = 'https://';
             $url .= ($this->_development) ? self::$_domains['development'] : self::$_domains['production'];
             $url .= '/';
@@ -278,33 +346,41 @@ class Soundcloud
      * @return mixed
      * @throws InvalidHttpResponseCodeException
      * @throws \JsonException
+     * @throws InvalidArgumentException
      *
      * @access protected
      */
-    protected function performRequest(string $url, array $curlOptions = [])
+    protected function performRequest(string $url, array $curlOptions = [], $needAccessToken = true)
     {
         $ch = curl_init($url);
         $options = array_replace([CURLOPT_RETURNTRANSFER => true], $curlOptions);
 
-        $options[CURLOPT_HTTPHEADER] = [
-            'Content-Type: application/json',
-            'Accept: application/json',
-            'Authorization: OAuth ' . $this->getAccessToken()
-        ];
+        $options[CURLOPT_HTTPHEADER] = [];
+        $options[CURLOPT_HTTPHEADER][] = array_key_exists(CURLOPT_POSTFIELDS, $options)
+            ? 'Content-Type: multipart/form-data' : 'Content-Type: application/json';
+        $options[CURLOPT_HTTPHEADER][] = 'Accept: application/json';
+
+        if ($needAccessToken) {
+            $options[CURLOPT_HTTPHEADER][] = 'Authorization: OAuth ' . $this->getAccessToken();
+        }
 
         curl_setopt_array($ch, $options);
 
-        $data = json_decode(curl_exec($ch), false, 512, JSON_THROW_ON_ERROR);
+        // to remove
+        curl_setopt($ch, CURLOPT_VERBOSE, true);
+        curl_setopt($ch,CURLINFO_HEADER_OUT,true);
+
+        $data = curl_exec($ch);
         $info = curl_getinfo($ch);
 
         curl_close($ch);
 
         if ($info['http_code'] >= 400) {
             throw new InvalidHttpResponseCodeException(
-                null, 0, $data, $info['http_code']
+                '', 0, $data, $info['http_code']
             );
         }
 
-        return $data;
+        return json_decode($data, false, 512, JSON_THROW_ON_ERROR);
     }
 }

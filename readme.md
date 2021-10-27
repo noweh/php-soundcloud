@@ -1,10 +1,10 @@
-# Soundcloud API for PHP
+# SoundCloud API for PHP
 
 ![SoundCloud](https://img.shields.io/static/v1?style=flat-square&message=SoundCloud&color=FF3300&logo=SoundCloud&logoColor=FFFFFF&label=)
 ![php](https://img.shields.io/badge/PHP-v7.3-828cb7.svg?style=flat-square)
 [![MIT Licensed](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](licence.md)
 
-A PHP Wrapper for the Soundcloud REST API endpoints.
+A PHP Wrapper for the SoundCloud REST API endpoints.
 
 ## Installation
 First, you need to add the component to your composer.json
@@ -14,6 +14,10 @@ composer require noweh/php-soundcloud
 Update your packages with *composer update* or install with *composer install*.
 
 ## Usage
+
+For the calls to be valid, you must now follow a few steps :
+
+
 First, you have to create a new instance of the wrapper with the following parameters:
 
 ```
@@ -26,7 +30,39 @@ $client = new SoundCloud(
 );
 ```
 
+⚠️ Since [July 2021](https://developers.soundcloud.com/blog/security-updates-api), most calls to Soundcloud REST API requires an `access_token`.
+
+⚠️ `{CALLBACK_URL}` must be identical to the one indicated in your SoundCloud account.
+
+Second, you have to redirect the user to the soundcloud login page:
+```
+...
+header("Location: " . $client->getAuthorizeUrl('a_custom_param_to_retrieve_in_callback'));
+exit();
+```
+
+On your callback URL, you can call GET/POST/PUT/DELETE methods. The `access_token` will be automatically generated with the `code` parameter present in this URL.
+
+If you want to use API calls in another page, you have to set manually this data:
+```
+use Noweh\SoundcloudApi\Soundcloud;
+
+$client = new SoundCloud(
+    {CLIENT_ID},
+    {CLIENT_SECRET},
+    {CALLBACK_URL}
+);
+
+$client->setCode('3-134981-158678512-IwAXqypKWlDJCF');
+
+// API Call
+...
+```
+
+
 ### Get Player Embed
+###This call doest not requires an access_token.
+
 To retrieve the widget embed code for any SoundCloud URL pointing to a user, set, or a playlist, do the following:
 ```
 ... // Create a new instance of client
