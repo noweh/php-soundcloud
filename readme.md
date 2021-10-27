@@ -15,7 +15,7 @@ Update your packages with *composer update* or install with *composer install*.
 
 ## Usage
 
-For the calls to be valid, you must now follow a few steps :
+For the calls to be valid, you must follow a few steps :
 
 
 First, you have to create a new instance of the wrapper with the following parameters:
@@ -30,11 +30,11 @@ $client = new SoundCloud(
 );
 ```
 
-⚠️ Since [July 2021](https://developers.soundcloud.com/blog/security-updates-api), most calls to Soundcloud REST API requires an `access_token`.
+⚠️ Since [July 2021](https://developers.soundcloud.com/blog/security-updates-api), most calls to SoundCloud REST API requires an `access_token`.
 
-⚠️ `{CALLBACK_URL}` must be identical to the one indicated in your SoundCloud account.
+⚠️ `{CALLBACK_URL}` must be the same as the one indicated in your SoundCloud account.
 
-Second, you have to redirect the user to the soundcloud login page:
+Second, you have to redirect the user to the SoundCloud login page:
 ```
 ...
 header("Location: " . $client->getAuthorizeUrl('a_custom_param_to_retrieve_in_callback'));
@@ -61,7 +61,7 @@ $client->setCode('3-134981-158678512-IwAXqypKWlDJCF');
 
 
 ### Get Player Embed
-###This call doest not requires an access_token.
+###This call doest not require an access_token.
 
 To retrieve the widget embed code for any SoundCloud URL pointing to a user, set, or a playlist, do the following:
 ```
