@@ -61,7 +61,7 @@ $client->setCode('3-134981-158678512-IwAXqypKWlDJCF');
 
 
 ### Get Player Embed
-###This call doest not require an access_token.
+### This call does not require an access_token.
 
 To retrieve the widget embed code for any SoundCloud URL pointing to a user, set, or a playlist, do the following:
 ```
