@@ -1,8 +1,9 @@
 # SoundCloud API for PHP
 
 ![SoundCloud](https://img.shields.io/static/v1?style=flat-square&message=SoundCloud&color=FF3300&logo=SoundCloud&logoColor=FFFFFF&label=)
-![php](https://img.shields.io/badge/PHP-v7.3-828cb7.svg?style=flat-square)
-[![MIT Licensed](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](licence.md)
+![PHP](https://img.shields.io/badge/PHP-v7.3-828cb7.svg?style=flat-square&logo=php)
+[![MIT Licensed](https://img.shields.io/github/license/noweh/php-soundcloud)](licence.md)
+[![last version](https://img.shields.io/packagist/v/noweh/php-soundcloud)](https://packagist.org/packages/noweh/php-soundcloud)
 
 A PHP Wrapper for the SoundCloud REST API endpoints.
 
